@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, TextInput, Text, StyleSheet, TextInputProps } from 'react-native';
+import React, { useState } from 'react';
+import { View, TextInput, Text, StyleSheet, TextInputProps, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 
 interface InputProps extends TextInputProps {
@@ -7,15 +8,32 @@ interface InputProps extends TextInputProps {
   error?: string;
 }
 
-export const Input: React.FC<InputProps> = ({ label, error, style, ...rest }) => {
+export const Input: React.FC<InputProps> = ({ label, error, style, secureTextEntry, ...rest }) => {
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput
-        style={[styles.input, error && styles.inputError, style]}
-        placeholderTextColor={colors.textMuted}
-        {...rest}
-      />
+      <View style={[styles.inputContainer, error && styles.inputError, style]}>
+        <TextInput
+          style={styles.input}
+          placeholderTextColor={colors.textMuted}
+          secureTextEntry={secureTextEntry && !isPasswordVisible}
+          {...rest}
+        />
+        {secureTextEntry && (
+          <TouchableOpacity 
+            style={styles.eyeIcon} 
+            onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+          >
+            <Ionicons 
+              name={isPasswordVisible ? "eye-off" : "eye"} 
+              size={20} 
+              color={colors.textMuted} 
+            />
+          </TouchableOpacity>
+        )}
+      </View>
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
@@ -32,15 +50,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  input: {
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.surface,
-    color: colors.textPrimary,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  input: {
+    flex: 1,
+    color: colors.textPrimary,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: 'transparent',
+  },
+  eyeIcon: {
+    padding: 12,
   },
   inputError: {
     borderColor: colors.danger,

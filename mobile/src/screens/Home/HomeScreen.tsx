@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { Card } from '../../components/Card';
 
@@ -30,7 +31,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           onPress={() => navigation.navigate('FadigaZero')}
         >
           <Card style={[styles.moduleCard, { borderLeftColor: colors.primary, borderLeftWidth: 4 }]}>
-            <Text style={styles.moduleTitle}>⚡ Teste de Prontidão</Text>
+            <View style={styles.titleContainer}>
+              <Ionicons name="flash" size={24} color={colors.primary} style={styles.icon} />
+              <Text style={styles.moduleTitle}>Teste de Prontidão</Text>
+            </View>
             <Text style={styles.moduleDesc}>
               Faça um teste rápido de reflexos para garantir que você não está com fadiga extrema antes de dirigir.
             </Text>
@@ -43,7 +47,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.spacing}
         >
           <Card style={[styles.moduleCard, { borderLeftColor: colors.warning, borderLeftWidth: 4 }]}>
-            <Text style={styles.moduleTitle}>🚦 Feed Via Alerta</Text>
+            <View style={styles.titleContainer}>
+              <Ionicons name="warning" size={24} color={colors.warning} style={styles.icon} />
+              <Text style={styles.moduleTitle}>Feed Via Alerta</Text>
+            </View>
             <Text style={styles.moduleDesc}>
               Acompanhe reportes de perigos na via ou crie um novo reporte para avisar outros motoristas.
             </Text>
@@ -80,11 +87,18 @@ const styles = StyleSheet.create({
   moduleCard: {
     paddingVertical: 24,
   },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  icon: {
+    marginRight: 8,
+  },
   moduleTitle: {
     color: colors.textPrimary,
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 8,
   },
   moduleDesc: {
     color: colors.textMuted,

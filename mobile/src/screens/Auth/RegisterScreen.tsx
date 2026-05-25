@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../../theme/colors';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
+import { AuthContext } from '../../contexts/AuthContext';
 
 type RootStackParamList = {
   Login: undefined;
@@ -18,15 +19,50 @@ interface Props {
 }
 
 export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
+  const { signIn } = useContext(AuthContext);
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({ name: '', email: '', password: '' });
 
-  const handleRegister = () => {
+  const validate = () => {
+    let isValid = true;
+    const newErrors = { name: '', email: '', password: '' };
+
+    if (!name.trim()) {
+      newErrors.name = 'Nome é obrigatório';
+      isValid = false;
+    }
+
+    if (!email) {
+      newErrors.email = 'E-mail é obrigatório';
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'E-mail inválido';
+      isValid = false;
+    }
+
+    if (!password) {
+      newErrors.password = 'Senha é obrigatória';
+      isValid = false;
+    } else if (password.length < 6) {
+      newErrors.password = 'A senha deve ter no mínimo 6 caracteres';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleRegister = async () => {
+    if (!validate()) return;
+    
     setLoading(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       setLoading(false);
+      await signIn('fake-jwt-token-12345');
       navigation.replace('Home');
     }, 1000);
   };
@@ -46,23 +82,26 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
             label="Nome Completo" 
             placeholder="Digite seu nome" 
             value={name}
-            onChangeText={setName}
+            onChangeText={(text) => { setName(text); setErrors(prev => ({...prev, name: ''})); }}
             autoCapitalize="words"
+            error={errors.name}
           />
           <Input 
             label="Email" 
             placeholder="Digite seu email" 
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(text) => { setEmail(text); setErrors(prev => ({...prev, email: ''})); }}
             keyboardType="email-address"
             autoCapitalize="none"
+            error={errors.email}
           />
           <Input 
             label="Senha" 
             placeholder="Crie uma senha segura" 
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(text) => { setPassword(text); setErrors(prev => ({...prev, password: ''})); }}
             secureTextEntry
+            error={errors.password}
           />
         </View>
 

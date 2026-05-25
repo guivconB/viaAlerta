@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
@@ -19,10 +20,10 @@ interface Props {
 
 // Mock data for the feed
 const mockReports = [
-  { id: '1', type: 'BURACO', desc: 'Buraco gigante na pista direita', location: 'Av. Rio de Janeiro', time: 'Há 10 min' },
+  { id: '1', type: 'BURACO', desc: 'Buraco gigante na pista direita', location: 'Av. Paulista', time: 'Há 10 min' },
   { id: '2', type: 'ACIDENTE', desc: 'Batida entre dois carros bloqueando cruzamento', location: 'Centro', time: 'Há 25 min' },
-  { id: '3', type: 'ILUMINACAO_DEFICIENTE', desc: 'Poste apagado na rua toda', location: 'Orla', time: 'Há 2 horas' },
-  { id: '4', type: 'SEMAFORO_QUEBRADO', desc: 'Semáforo piscando no amarelo', location: 'Luzia', time: 'Há 3 horas' },
+  { id: '3', type: 'ILUMINACAO_DEFICIENTE', desc: 'Poste apagado na rua toda', location: 'Vila Mariana', time: 'Há 2 horas' },
+  { id: '4', type: 'SEMAFORO_QUEBRADO', desc: 'Semáforo piscando no amarelo', location: 'Pinheiros', time: 'Há 3 horas' },
 ];
 
 export const FeedScreen: React.FC<Props> = ({ navigation }) => {
@@ -42,10 +43,16 @@ export const FeedScreen: React.FC<Props> = ({ navigation }) => {
         <View style={[styles.typeBadge, { backgroundColor: getTypeColor(item.type) }]}>
           <Text style={styles.typeText}>{item.type.replace('_', ' ')}</Text>
         </View>
-        <Text style={styles.timeText}>{item.time}</Text>
+        <View style={styles.iconRow}>
+          <Ionicons name="time-outline" size={14} color={colors.textMuted} style={{marginRight: 4}} />
+          <Text style={styles.timeText}>{item.time}</Text>
+        </View>
       </View>
       <Text style={styles.descText}>{item.desc}</Text>
-      <Text style={styles.locationText}>📍 {item.location}</Text>
+      <View style={styles.iconRow}>
+        <Ionicons name="location-outline" size={16} color={colors.textMuted} style={{marginRight: 4}} />
+        <Text style={styles.locationText}>{item.location}</Text>
+      </View>
     </Card>
   );
 
@@ -138,6 +145,10 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 14,
     fontWeight: '500',
+  },
+  iconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   fabContainer: {
     position: 'absolute',

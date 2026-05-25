@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../../theme/colors';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
+import { AuthContext } from '../../contexts/AuthContext';
+// import { Ionicons } from '@expo/vector-icons'; // We will add icons next
 
 type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Home: undefined;
+  ForgotPassword: undefined;
 };
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -18,16 +21,44 @@ interface Props {
 }
 
 export const LoginScreen: React.FC<Props> = ({ navigation }) => {
+  const { signIn } = useContext(AuthContext);
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({ email: '', password: '' });
 
-  const handleLogin = () => {
-    // Basic mock login for now
+  const validate = () => {
+    let isValid = true;
+    const newErrors = { email: '', password: '' };
+
+    if (!email) {
+      newErrors.email = 'E-mail é obrigatório';
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'E-mail inválido';
+      isValid = false;
+    }
+
+    if (!password) {
+      newErrors.password = 'Senha é obrigatória';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleLogin = async () => {
+    if (!validate()) return;
+    
     setLoading(true);
-    setTimeout(() => {
+    
+    // Simulate API delay and success
+    setTimeout(async () => {
       setLoading(false);
-      // Navigate to Home screen after login
+      // Simulate saving a fake token
+      await signIn('fake-jwt-token-12345');
       navigation.replace('Home');
     }, 1000);
   };
@@ -43,16 +74,18 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             label="Email" 
             placeholder="Digite seu email" 
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(text) => { setEmail(text); setErrors(prev => ({...prev, email: ''})); }}
             keyboardType="email-address"
             autoCapitalize="none"
+            error={errors.email}
           />
           <Input 
             label="Senha" 
             placeholder="Digite sua senha" 
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(text) => { setPassword(text); setErrors(prev => ({...prev, password: ''})); }}
             secureTextEntry
+            error={errors.password}
           />
           
           <TouchableOpacity 
