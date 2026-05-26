@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Vibration } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../../theme/colors';
 import { Button } from '../../components/Button';
@@ -35,6 +35,7 @@ export const ReflexTestScreen: React.FC<Props> = ({ navigation }) => {
     timeoutRef.current = setTimeout(() => {
       setGameState('active');
       startTimeRef.current = Date.now();
+      Vibration.vibrate(200); // Strong alert vibration when it turns green!
     }, delay);
   };
 
@@ -42,10 +43,12 @@ export const ReflexTestScreen: React.FC<Props> = ({ navigation }) => {
     if (gameState === 'waiting') {
       // Tapped too early
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      Vibration.vibrate([0, 150]); // Error vibration pattern
       setGameState('too_early');
     } else if (gameState === 'active') {
       // Successful tap
       const timeElapsed = Date.now() - startTimeRef.current;
+      Vibration.vibrate(50); // Fast success tap vibration
       setReactionTime(timeElapsed);
       setGameState('finished');
     }
