@@ -1,10 +1,12 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Image, Alert } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
+import { reportsService, Report } from '../../services/reports';
+import MapView, { Marker, Callout } from 'react-native-maps';
 
 type RootStackParamList = {
   Home: undefined;
@@ -18,40 +20,101 @@ interface Props {
   navigation: FeedScreenNavigationProp;
 }
 
-// Mock data for the feed
-const mockReports = [
-  { id: '1', type: 'BURACO', desc: 'Buraco gigante na pista direita', location: 'Av. Paulista', time: 'Há 10 min' },
-  { id: '2', type: 'ACIDENTE', desc: 'Batida entre dois carros bloqueando cruzamento', location: 'Centro', time: 'Há 25 min' },
-  { id: '3', type: 'ILUMINACAO_DEFICIENTE', desc: 'Poste apagado na rua toda', location: 'Vila Mariana', time: 'Há 2 horas' },
-  { id: '4', type: 'SEMAFORO_QUEBRADO', desc: 'Semáforo piscando no amarelo', location: 'Pinheiros', time: 'Há 3 horas' },
-];
-
 export const FeedScreen: React.FC<Props> = ({ navigation }) => {
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [reports, setReports] = useState<Report[]>([]);
+  const [selectedMapReport, setSelectedMapReport] = useState<Report | null>(null);
+
+  useEffect(() => {
+    // Subscribe to reports updates in real-time
+    const unsubscribe = reportsService.subscribe((updatedReports) => {
+      setReports(updatedReports);
+    });
+    return unsubscribe;
+  }, []);
 
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'ACIDENTE': return colors.danger;
       case 'BURACO': return colors.warning;
       case 'SEMAFORO_QUEBRADO': return colors.primary;
+      case 'ILUMINACAO_DEFICIENTE': return '#8B5CF6'; // Roxo elegante
       default: return colors.textMuted;
     }
   };
 
-  const renderReport = ({ item }: { item: typeof mockReports[0] }) => (
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'ACIDENTE': return 'car-sport';
+      case 'BURACO': return 'warning';
+      case 'SEMAFORO_QUEBRADO': return 'eye-off';
+      case 'ILUMINACAO_DEFICIENTE': return 'bulb';
+      default: return 'alert-circle';
+    }
+  };
+
+  const handleUpvote = (id: string) => {
+    reportsService.upvote(id);
+  };
+
+  const handleResolved = (id: string) => {
+    reportsService.voteResolved(id);
+  };
+
+  const renderReport = ({ item }: { item: Report }) => (
     <Card style={styles.reportCard}>
       <View style={styles.cardHeader}>
         <View style={[styles.typeBadge, { backgroundColor: getTypeColor(item.type) }]}>
+          <Ionicons name={getTypeIcon(item.type) as any} size={14} color="#FFF" style={{ marginRight: 6 }} />
           <Text style={styles.typeText}>{item.type.replace('_', ' ')}</Text>
         </View>
         <View style={styles.iconRow}>
-          <Ionicons name="time-outline" size={14} color={colors.textMuted} style={{marginRight: 4}} />
+          <Ionicons name="time-outline" size={14} color={colors.textMuted} style={{ marginRight: 4 }} />
           <Text style={styles.timeText}>{item.time}</Text>
         </View>
       </View>
+
+      {item.imageUrl && (
+        <Image source={{ uri: item.imageUrl }} style={styles.reportImage} />
+      )}
+
       <Text style={styles.descText}>{item.desc}</Text>
-      <View style={styles.iconRow}>
-        <Ionicons name="location-outline" size={16} color={colors.textMuted} style={{marginRight: 4}} />
+
+      <View style={[styles.iconRow, { marginBottom: 16 }]}>
+        <Ionicons name="location-outline" size={16} color={colors.textMuted} style={{ marginRight: 4 }} />
         <Text style={styles.locationText}>{item.location}</Text>
+      </View>
+
+      {/* Community validation tools */}
+      <View style={styles.divider} />
+      <View style={styles.actionRow}>
+        <TouchableOpacity 
+          style={[styles.actionBtn, item.votedByMe && styles.actionBtnActive]} 
+          onPress={() => handleUpvote(item.id)}
+        >
+          <Ionicons 
+            name={item.votedByMe ? "thumbs-up" : "thumbs-up-outline"} 
+            size={18} 
+            color={item.votedByMe ? colors.success : colors.textMuted} 
+          />
+          <Text style={[styles.actionText, item.votedByMe && { color: colors.success }]}>
+            Eu vi isso ({item.upvotes})
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.actionBtn, item.resolvedByMe && styles.actionBtnActiveResolved]} 
+          onPress={() => handleResolved(item.id)}
+        >
+          <Ionicons 
+            name={item.resolvedByMe ? "checkmark-circle" : "checkmark-circle-outline"} 
+            size={18} 
+            color={item.resolvedByMe ? colors.primary : colors.textMuted} 
+          />
+          <Text style={[styles.actionText, item.resolvedByMe && { color: colors.primary }]}>
+            Resolvido ({item.resolvedVotes})
+          </Text>
+        </TouchableOpacity>
       </View>
     </Card>
   );
@@ -59,19 +122,126 @@ export const FeedScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Início</Text>
-        </TouchableOpacity>
+        <View style={styles.topRow}>
+          <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backButton}>
+            <Text style={styles.backButtonText}>← Início</Text>
+          </TouchableOpacity>
+
+          {/* Map vs List View Toggle */}
+          <View style={styles.toggleContainer}>
+            <TouchableOpacity 
+              style={[styles.toggleBtn, viewMode === 'list' && styles.toggleBtnActive]}
+              onPress={() => setViewMode('list')}
+            >
+              <Ionicons name="list" size={16} color={viewMode === 'list' ? '#FFF' : colors.textMuted} />
+              <Text style={[styles.toggleText, viewMode === 'list' && styles.toggleTextActive]}>Lista</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.toggleBtn, viewMode === 'map' && styles.toggleBtnActive]}
+              onPress={() => setViewMode('map')}
+            >
+              <Ionicons name="map" size={16} color={viewMode === 'map' ? '#FFF' : colors.textMuted} />
+              <Text style={[styles.toggleText, viewMode === 'map' && styles.toggleTextActive]}>Mapa</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
         <Text style={styles.title}>Feed Via Alerta</Text>
       </View>
 
-      <FlatList
-        data={mockReports}
-        keyExtractor={item => item.id}
-        renderItem={renderReport}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
+      {viewMode === 'list' ? (
+        <FlatList
+          data={reports}
+          keyExtractor={item => item.id}
+          renderItem={renderReport}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <View style={styles.mapContainer}>
+          <MapView
+            style={StyleSheet.absoluteFillObject}
+            initialRegion={{
+              latitude: -10.9472,
+              longitude: -37.0731,
+              latitudeDelta: 0.12,
+              longitudeDelta: 0.12,
+            }}
+            userInterfaceStyle="dark"
+          >
+            {reports.map((report) => (
+              <Marker
+                key={report.id}
+                coordinate={{ latitude: report.latitude, longitude: report.longitude }}
+                pinColor={getTypeColor(report.type)}
+                onPress={() => setSelectedMapReport(report)}
+              >
+                <Callout tooltip>
+                  <View style={styles.calloutContainer}>
+                    <Text style={styles.calloutTitle}>{report.type.replace('_', ' ')}</Text>
+                    <Text style={styles.calloutDesc} numberOfLines={2}>{report.desc}</Text>
+                    <Text style={styles.calloutLocation}>{report.location}</Text>
+                    <Text style={styles.calloutPrompt}>Toque fora para detalhes</Text>
+                  </View>
+                </Callout>
+              </Marker>
+            ))}
+          </MapView>
+
+          {/* Quick detail overlay card when a marker is pressed */}
+          {selectedMapReport && (
+            <Card style={styles.mapReportOverlay}>
+              <TouchableOpacity 
+                style={styles.closeOverlayBtn} 
+                onPress={() => setSelectedMapReport(null)}
+              >
+                <Ionicons name="close" size={20} color={colors.textMuted} />
+              </TouchableOpacity>
+              
+              <View style={styles.cardHeader}>
+                <View style={[styles.typeBadge, { backgroundColor: getTypeColor(selectedMapReport.type) }]}>
+                  <Ionicons name={getTypeIcon(selectedMapReport.type) as any} size={12} color="#FFF" style={{ marginRight: 4 }} />
+                  <Text style={styles.typeText}>{selectedMapReport.type.replace('_', ' ')}</Text>
+                </View>
+                <Text style={styles.timeText}>{selectedMapReport.time}</Text>
+              </View>
+
+              {selectedMapReport.imageUrl && (
+                <Image source={{ uri: selectedMapReport.imageUrl }} style={styles.overlayImage} />
+              )}
+
+              <Text style={styles.descText} numberOfLines={2}>{selectedMapReport.desc}</Text>
+              
+              <View style={[styles.iconRow, { marginBottom: 12 }]}>
+                <Ionicons name="location-outline" size={14} color={colors.textMuted} style={{ marginRight: 4 }} />
+                <Text style={styles.locationText}>{selectedMapReport.location}</Text>
+              </View>
+
+              <View style={styles.divider} />
+              <View style={styles.actionRow}>
+                <TouchableOpacity 
+                  style={[styles.actionBtn, selectedMapReport.votedByMe && styles.actionBtnActive]} 
+                  onPress={() => handleUpvote(selectedMapReport.id)}
+                >
+                  <Ionicons name="thumbs-up" size={16} color={selectedMapReport.votedByMe ? colors.success : colors.textMuted} />
+                  <Text style={[styles.actionText, selectedMapReport.votedByMe && { color: colors.success }]}>
+                    ({selectedMapReport.upvotes})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.actionBtn, selectedMapReport.resolvedByMe && styles.actionBtnActiveResolved]} 
+                  onPress={() => handleResolved(selectedMapReport.id)}
+                >
+                  <Ionicons name="checkmark-circle" size={16} color={selectedMapReport.resolvedByMe ? colors.primary : colors.textMuted} />
+                  <Text style={[styles.actionText, selectedMapReport.resolvedByMe && { color: colors.primary }]}>
+                    ({selectedMapReport.resolvedVotes})
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </Card>
+          )}
+        </View>
+      )}
 
       <View style={styles.fabContainer}>
         <Button 
@@ -95,13 +265,47 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.surface,
   },
-  backButton: {
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 12,
+  },
+  backButton: {
+    paddingVertical: 4,
+    paddingRight: 16,
   },
   backButtonText: {
     color: colors.primary,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    padding: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  toggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  toggleBtnActive: {
+    backgroundColor: '#333',
+  },
+  toggleText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  toggleTextActive: {
+    color: '#FFF',
   },
   title: {
     color: colors.textPrimary,
@@ -110,10 +314,11 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 24,
-    paddingBottom: 100, // Space for the FAB
+    paddingBottom: 120, // Space for the FAB
   },
   reportCard: {
     marginBottom: 16,
+    padding: 16,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -122,38 +327,139 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   typeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
   },
   typeText: {
     color: '#FFF',
     fontSize: 12,
     fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
   timeText: {
     color: colors.textMuted,
     fontSize: 12,
   },
+  reportImage: {
+    width: '100%',
+    height: 180,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
   descText: {
     color: colors.textPrimary,
-    fontSize: 16,
+    fontSize: 15,
     marginBottom: 12,
     lineHeight: 22,
   },
   locationText: {
     color: colors.textMuted,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
   },
   iconRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  divider: {
+    height: 1,
+    backgroundColor: '#262626',
+    marginVertical: 12,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E1E1E',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#333',
+    width: '48%',
+    justifyContent: 'center',
+  },
+  actionBtnActive: {
+    backgroundColor: 'rgba(34, 197, 94, 0.08)',
+    borderColor: colors.success,
+  },
+  actionBtnActiveResolved: {
+    backgroundColor: 'rgba(249, 115, 22, 0.08)',
+    borderColor: colors.primary,
+  },
+  actionText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  mapContainer: {
+    flex: 1,
+  },
+  calloutContainer: {
+    width: 220,
+    backgroundColor: '#1C1C1E',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  calloutTitle: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  calloutDesc: {
+    color: '#AAA',
+    fontSize: 12,
+    marginBottom: 6,
+  },
+  calloutLocation: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  calloutPrompt: {
+    color: colors.primary,
+    fontSize: 10,
+    textAlign: 'center',
+    marginTop: 6,
+    fontWeight: 'bold',
+  },
+  mapReportOverlay: {
+    position: 'absolute',
+    bottom: 100,
+    left: 20,
+    right: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  closeOverlayBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 10,
+    padding: 4,
+  },
+  overlayImage: {
+    width: '100%',
+    height: 100,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
   fabContainer: {
     position: 'absolute',
     bottom: 24,
     left: 24,
     right: 24,
+    zIndex: 99,
   }
 });
