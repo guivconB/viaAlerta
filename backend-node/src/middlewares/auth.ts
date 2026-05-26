@@ -1,16 +1,19 @@
-import { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../utils/jwt';
+import type { Request, Response, NextFunction } from 'express';
+import { verifyToken } from '../utils/jwt.js';
 
-// Extend Express Request to include user info
-declare global {
-  namespace Express {
-    interface Request {
-      user?: { id: string };
-    }
-  }
-}
+// 🔹 Tipagem do payload do token
+type TokenPayload = {
+  id: string;
+  email?: string;
+};
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+type AuthRequest = Request & {
+  user?: {
+    id: number;
+  };
+};
+
+export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
@@ -23,17 +26,22 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     return res.status(401).json({ error: 'Erro no formato do Token' });
   }
 
-  const [scheme, token] = parts;
+  const [scheme, token] = parts as [string, string];
 
   if (!/^Bearer$/i.test(scheme)) {
     return res.status(401).json({ error: 'Token mal formatado' });
   }
 
   try {
-    const decoded = verifyToken(token);
-    req.user = { id: decoded.id };
+    const decoded = verifyToken(token) as TokenPayload;
+
+    // 🔥 GARANTE number
+    req.user = {
+      id: Number(decoded.id),
+    };
+
     return next();
-  } catch (err) {
+  } catch {
     return res.status(401).json({ error: 'Token inválido' });
   }
 };
