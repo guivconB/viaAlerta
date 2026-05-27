@@ -5,6 +5,7 @@ import axios from 'axios';
 interface AuthContextData {
   token: string | null;
   userName: string | null;
+  role: string | null;
   isLoading: boolean;
   signIn: (token: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -15,6 +16,7 @@ export const AuthContext = createContext<AuthContextData>({} as AuthContextData)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -42,6 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         headers: { Authorization: `Bearer ${activeToken}` }
       });
       setUserName(res.data.user?.name || null);
+      setRole(res.data.user?.role || 'USER');
     } catch (e) {
       console.log('Could not fetch user name', e);
     }
@@ -62,13 +65,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await SecureStore.deleteItemAsync('viaAlerta_token');
       setToken(null);
       setUserName(null);
+      setRole(null);
     } catch (error) {
       console.error('Failed to delete token:', error);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ token, userName, isLoading, signIn, signOut }}>
+    <AuthContext.Provider value={{ token, userName, role, isLoading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

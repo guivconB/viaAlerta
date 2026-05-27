@@ -3,7 +3,8 @@ import {
   createPostController,
   listFeedController,
   toggleUpvoteController,
-  toggleResolvedController
+  toggleResolvedController,
+  deletePostController
 } from "./postController.js";
 
 import { authMiddleware } from "../../src/middlewares/auth.js";
@@ -27,5 +28,8 @@ router.get("/", optionalAuth, listFeedController);
 /* VOTAR (protegido) */
 router.post("/:id/upvote", authMiddleware, toggleUpvoteController);
 router.post("/:id/resolve", authMiddleware, toggleResolvedController);
+
+/* DELETE (apenas ADMIN) */
+router.delete("/:id", authMiddleware, deletePostController);
 
 export default router;

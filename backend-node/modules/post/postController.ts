@@ -1,4 +1,4 @@
-import { createPostService, listFeedService, toggleUpvoteService, toggleResolvedService } from './postService.js';
+import { createPostService, listFeedService, toggleUpvoteService, toggleResolvedService, deletePostService } from './postService.js';
 import type { Request, Response } from 'express';
 
 type RequestWithUser = Request & {
@@ -85,5 +85,37 @@ export const toggleResolvedController = async (req: RequestWithUser, res: Respon
     return res.status(200).json(result);
   } catch (error) {
     return res.status(500).json({ error: "Erro ao registrar status resolvido" });
+  }
+};
+
+/* DELETE POST */
+export const deletePostController = async (req: RequestWithUser, res: Response) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: "Não autenticado" });
+    
+    const postId = Number(req.params.id);
+    
+    await deletePostService(postId);
+    return res.status(200).json({ message: "Post deletado com sucesso" });
+  } catch (error) {
+    return res.status(500).json({ error: "Erro ao deletar post" });
+  }
+};
+
+/* DELETE POST */
+export const deletePostController = async (req: RequestWithUser, res: Response) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: "Não autenticado" });
+    
+    const postId = Number(req.params.id);
+    const userId = Number(req.user.id);
+    
+    await deletePostService(postId, userId);
+    return res.status(200).json({ message: "Post excluído com sucesso" });
+  } catch (error: any) {
+    if (error.message.includes("permitida")) {
+      return res.status(403).json({ error: error.message });
+    }
+    return res.status(500).json({ error: "Erro ao excluir post" });
   }
 };

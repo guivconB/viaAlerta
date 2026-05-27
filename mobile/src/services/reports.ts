@@ -93,6 +93,20 @@ export const reportsService = {
     }
   },
 
+  async deleteReport(id: string) {
+    try {
+      // Optimistic update
+      reports = reports.filter(r => r.id !== id);
+      this.notify();
+      
+      await api.delete(`/posts/${id}`);
+    } catch (e) {
+      console.error('Failed to delete report:', e);
+      await this.fetchReports(); // revert on fail
+      throw e;
+    }
+  },
+
   subscribe(listener: Listener) {
     listeners.add(listener);
     this.fetchReports(); // fetch imediato ao entrar na tela

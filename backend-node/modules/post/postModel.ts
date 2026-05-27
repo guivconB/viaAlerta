@@ -100,3 +100,9 @@ export const toggleResolved = async (postId: number, userId: number) => {
     return { resolvedByMe: true };
   }
 };
+
+export const deletePostById = async (postId: number) => {
+  await db.execute('DELETE FROM post_upvotes WHERE postId = ?', [postId]);
+  await db.execute('DELETE FROM post_resolved WHERE postId = ?', [postId]);
+  await db.execute('DELETE FROM posts WHERE id = ?', [postId]);
+};

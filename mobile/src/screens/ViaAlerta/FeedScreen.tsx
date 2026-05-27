@@ -6,6 +6,7 @@ import { colors } from '../../theme/colors';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { reportsService, Report } from '../../services/reports';
+import { useAuth } from '../../contexts/AuthContext';
 import MapView, { Marker, Callout } from 'react-native-maps';
 
 type RootStackParamList = {
@@ -32,6 +33,7 @@ const FILTERS: { label: string; value: FilterType; icon: string }[] = [
 ];
 
 export const FeedScreen: React.FC<Props> = ({ navigation }) => {
+  const { role } = useAuth();
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [reports, setReports] = useState<Report[]>([]);
   const [selectedMapReport, setSelectedMapReport] = useState<Report | null>(null);
@@ -89,6 +91,27 @@ export const FeedScreen: React.FC<Props> = ({ navigation }) => {
     reportsService.voteResolved(id);
   };
 
+  const handleDelete = (id: string) => {
+    Alert.alert(
+      'Excluir Alerta',
+      'Tem certeza que deseja apagar este alerta do sistema? Essa ação não pode ser desfeita.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Excluir', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await reportsService.deleteReport(id);
+            } catch (e) {
+              Alert.alert('Erro', 'Não foi possível excluir o alerta.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const renderReport = ({ item }: { item: Report }) => (
     <Card style={styles.reportCard}>
       <View style={styles.cardHeader}>
@@ -99,6 +122,11 @@ export const FeedScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.iconRow}>
           <Ionicons name="time-outline" size={14} color={colors.textMuted} style={{ marginRight: 4 }} />
           <Text style={styles.timeText}>{item.time}</Text>
+          {role === 'ADMIN' && (
+            <TouchableOpacity onPress={() => handleDelete(item.id)} style={{ marginLeft: 12 }}>
+              <Ionicons name="trash-outline" size={20} color={colors.danger} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 

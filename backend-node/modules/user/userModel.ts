@@ -6,6 +6,7 @@ export type User = {
   id: number;
   name: string;
   email: string;
+  role: string;
   birthday: string;
   createdAt: string;
 };
@@ -21,7 +22,7 @@ export type CreateUserData = {
 export const findUserByEmail = async (email: string) => {
   const [rows] = await db.execute<RowDataPacket[]>(
     `SELECT 
-      id, name, email, password, birthday, createdAt 
+      id, name, email, password, role, birthday, createdAt 
      FROM users 
      WHERE email = ?`,
     [email]
@@ -33,7 +34,7 @@ export const findUserByEmail = async (email: string) => {
 /* FIND BY ID */
 export const findUserById = async (id: number) => {
   const [rows] = await db.execute<RowDataPacket[]>(
-    `SELECT id, name, email, birthday, createdAt FROM users WHERE id = ?`,
+    `SELECT id, name, email, role, birthday, createdAt FROM users WHERE id = ?`,
     [id]
   );
   return rows.length > 0 ? rows[0] : null;
@@ -62,7 +63,7 @@ export const insertUser = async (user: CreateUserData): Promise<User> => {
   // 🔥 busca o usuário recém criado
   const [rows] = await db.execute<RowDataPacket[]>(
     `SELECT 
-      id, name, email, birthday, createdAt 
+      id, name, email, role, birthday, createdAt 
      FROM users 
      WHERE id = ?`,
     [insertedId]
@@ -78,6 +79,7 @@ export const insertUser = async (user: CreateUserData): Promise<User> => {
     id: created.id,
     name: created.name,
     email: created.email,
+    role: created.role,
     birthday: created.birthday,
     createdAt: created.createdAt,
   };
@@ -87,7 +89,7 @@ export const insertUser = async (user: CreateUserData): Promise<User> => {
 export const findAllUsers = async (): Promise<User[]> => {
   const [rows] = await db.execute<RowDataPacket[]>(
     `SELECT 
-      id, name, email, birthday, createdAt 
+      id, name, email, role, birthday, createdAt 
      FROM users 
      ORDER BY createdAt DESC`
   );
