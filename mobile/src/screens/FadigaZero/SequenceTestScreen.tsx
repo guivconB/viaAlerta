@@ -200,7 +200,7 @@ export const SequenceTestScreen: React.FC<Props> = ({ navigation }) => {
 
           <View style={styles.actionButtons}>
             <Button title="Tentar Novamente" onPress={startTest} />
-            <Button title="Voltar ao Início" variant="outline" onPress={() => navigation.navigate('FadigaZero')} />
+            <Button title="Voltar ao Início" variant="outline" onPress={() => navigation.navigate('FadigaZeroMenu')} />
           </View>
         </View>
       );
@@ -211,7 +211,7 @@ export const SequenceTestScreen: React.FC<Props> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         {testState === 'idle' || testState === 'finished' ? (
-          <TouchableOpacity onPress={() => navigation.navigate('FadigaZero')} style={styles.backButton}>
+          <TouchableOpacity onPress={() => navigation.navigate('FadigaZeroMenu')} style={styles.backButton}>
             <Text style={styles.backButtonText}>← Voltar</Text>
           </TouchableOpacity>
         ) : (

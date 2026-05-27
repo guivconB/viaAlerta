@@ -5,6 +5,7 @@ import { colors } from '../../theme/colors';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { testsService } from '../../services/tests';
+import { Audio } from 'expo-av';
 
 type RootStackParamList = {
   Home: undefined;
@@ -26,6 +27,18 @@ export const ReflexTestScreen: React.FC<Props> = ({ navigation }) => {
   const startTimeRef = useRef<number>(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const playSound = async (type: 'beep' | 'error') => {
+    try {
+      const soundFile = type === 'beep' 
+        ? require('../../../assets/sounds/beep.wav') 
+        : require('../../../assets/sounds/error.wav');
+      const { sound } = await Audio.Sound.createAsync(soundFile);
+      await sound.playAsync();
+    } catch (e) {
+      console.log('Audio error:', e);
+    }
+  };
+
   const startGame = () => {
     setGameState('waiting');
     setReactionTime(null);
@@ -45,11 +58,13 @@ export const ReflexTestScreen: React.FC<Props> = ({ navigation }) => {
       // Tapped too early
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       Vibration.vibrate([0, 150]); // Error vibration pattern
+      playSound('error');
       setGameState('too_early');
     } else if (gameState === 'active') {
       // Successful tap
       const timeElapsed = Date.now() - startTimeRef.current;
       Vibration.vibrate(50); // Fast success tap vibration
+      playSound('beep');
       setReactionTime(timeElapsed);
       setGameState('finished');
       
@@ -127,7 +142,7 @@ export const ReflexTestScreen: React.FC<Props> = ({ navigation }) => {
 
             <View style={styles.actionButtons}>
               <Button title="Fazer outro teste" onPress={startGame} />
-              <Button title="Voltar ao Início" variant="outline" onPress={() => navigation.navigate('Home')} />
+              <Button title="Voltar ao Início" variant="outline" onPress={() => navigation.navigate('FadigaZeroMenu')} />
             </View>
           </View>
         );

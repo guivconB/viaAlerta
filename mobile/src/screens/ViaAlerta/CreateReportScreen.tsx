@@ -46,7 +46,7 @@ export const CreateReportScreen: React.FC<Props> = ({ navigation }) => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         // Graceful fallback for simulator/denied permissions
-        setLocationName('Av. Santos Dumont, Atalaia - Aracaju SE');
+        setLocationName('');
         setLatitude(-10.9788);
         setLongitude(-37.0494);
         setGpsLoading(false);
@@ -74,8 +74,8 @@ export const CreateReportScreen: React.FC<Props> = ({ navigation }) => {
         setLocationName(`Lat: ${location.coords.latitude.toFixed(4)}, Lng: ${location.coords.longitude.toFixed(4)}`);
       }
     } catch (error) {
-      console.warn('GPS error, using fallback Aracaju coordinates', error);
-      setLocationName('Av. Santos Dumont, Atalaia - Aracaju SE');
+      console.warn('GPS error, usando coordenadas fallback de Aracaju', error);
+      setLocationName(''); // Deixa vazio para o usuário digitar
       setLatitude(-10.9788);
       setLongitude(-37.0494);
     } finally {
@@ -206,7 +206,7 @@ export const CreateReportScreen: React.FC<Props> = ({ navigation }) => {
             <View>
               <Input 
                 label="Endereço Capturado"
-                placeholder="Carregando..."
+                placeholder="Digite o endereço manualmente..."
                 value={locationName}
                 onChangeText={setLocationName}
                 style={{ marginBottom: 4 }}

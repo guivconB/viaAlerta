@@ -5,6 +5,7 @@ import { LineChart } from 'react-native-chart-kit';
 import { colors } from '../../theme/colors';
 import { Card } from '../../components/Card';
 import { testsService, FatigueTestResult } from '../../services/tests';
+import { useTheme } from '../../theme/ThemeContext';
 
 type RootStackParamList = {
   FadigaZero: undefined;
@@ -18,6 +19,8 @@ interface Props {
 }
 
 export const HistoryScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [history, setHistory] = useState<FatigueTestResult[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -89,7 +92,7 @@ export const HistoryScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Text style={styles.backButtonText}>← Voltar</Text>
@@ -156,7 +159,7 @@ export const HistoryScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

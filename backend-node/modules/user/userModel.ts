@@ -30,6 +30,15 @@ export const findUserByEmail = async (email: string) => {
   return rows.length > 0 ? rows[0] : null;
 };
 
+/* FIND BY ID */
+export const findUserById = async (id: number) => {
+  const [rows] = await db.execute<RowDataPacket[]>(
+    `SELECT id, name, email, birthday, createdAt FROM users WHERE id = ?`,
+    [id]
+  );
+  return rows.length > 0 ? rows[0] : null;
+};
+
 /* INSERT USER */
 export const insertUser = async (user: CreateUserData): Promise<User> => {
   // ✅ formata a data para MySQL (YYYY-MM-DD)

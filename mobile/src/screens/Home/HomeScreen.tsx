@@ -2,14 +2,14 @@ import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { Card } from '../../components/Card';
-import { useAuth } from '../../contexts/AuthContext';
 
 type RootStackParamList = {
-  Home: undefined;
-  FadigaZero: undefined;
-  ViaAlerta: undefined;
+  Início: undefined;
+  Testes: undefined;
+  Mapa: undefined;
+  Perfil: undefined;
 };
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -19,47 +19,51 @@ interface Props {
 }
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
-  const { signOut } = useAuth();
+  const { colors } = useTheme();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <Text style={styles.greeting}>Olá, Motorista!</Text>
-          <TouchableOpacity onPress={signOut} style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={24} color={colors.danger} />
-          </TouchableOpacity>
+          <Text style={[styles.greeting, { color: colors.textPrimary }]}>Olá, Motorista!</Text>
         </View>
-        <Text style={styles.subtitle}>O que você deseja fazer agora?</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>O que você deseja fazer agora?</Text>
       </View>
 
       <View style={styles.content}>
         <TouchableOpacity 
           activeOpacity={0.8} 
-          onPress={() => navigation.navigate('FadigaZero')}
+          onPress={() => navigation.navigate('Testes')}
+          style={styles.touchableArea}
         >
           <Card style={[styles.moduleCard, { borderLeftColor: colors.primary, borderLeftWidth: 4 }]}>
             <View style={styles.titleContainer}>
               <Ionicons name="flash" size={24} color={colors.primary} style={styles.icon} />
-              <Text style={styles.moduleTitle}>Teste de Prontidão</Text>
+              <Text style={[styles.moduleTitle, { color: colors.textPrimary }]}>Teste de Prontidão</Text>
             </View>
-            <Text style={styles.moduleDesc}>
+            <Text style={[styles.moduleDesc, { color: colors.textMuted }]}>
               Faça um teste rápido de reflexos para garantir que você não está com fadiga extrema antes de dirigir.
             </Text>
           </Card>
         </TouchableOpacity>
 
+        <View style={styles.dividerContainer}>
+          <View style={[styles.dividerLine, { backgroundColor: colors.surface }]} />
+          <Text style={[styles.dividerText, { color: colors.textMuted }]}>OU</Text>
+          <View style={[styles.dividerLine, { backgroundColor: colors.surface }]} />
+        </View>
+
         <TouchableOpacity 
           activeOpacity={0.8} 
-          onPress={() => navigation.navigate('ViaAlerta')}
-          style={styles.spacing}
+          onPress={() => navigation.navigate('Mapa')}
+          style={styles.touchableArea}
         >
           <Card style={[styles.moduleCard, { borderLeftColor: colors.warning, borderLeftWidth: 4 }]}>
             <View style={styles.titleContainer}>
               <Ionicons name="warning" size={24} color={colors.warning} style={styles.icon} />
-              <Text style={styles.moduleTitle}>Feed Via Alerta</Text>
+              <Text style={[styles.moduleTitle, { color: colors.textPrimary }]}>Feed Via Alerta</Text>
             </View>
-            <Text style={styles.moduleDesc}>
+            <Text style={[styles.moduleDesc, { color: colors.textMuted }]}>
               Acompanhe reportes de perigos na via ou crie um novo reporte para avisar outros motoristas.
             </Text>
           </Card>
@@ -72,7 +76,6 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   header: {
     padding: 24,
@@ -84,23 +87,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  logoutButton: {
-    padding: 4,
-  },
   greeting: {
-    color: colors.textPrimary,
     fontSize: 28,
     fontWeight: 'bold',
   },
   subtitle: {
-    color: colors.textMuted,
     fontSize: 16,
   },
   content: {
     flex: 1,
     paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
+  touchableArea: {
+    flex: 1,
   },
   moduleCard: {
+    flex: 1,
+    justifyContent: 'center',
     paddingVertical: 24,
   },
   titleContainer: {
@@ -112,16 +116,25 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   moduleTitle: {
-    color: colors.textPrimary,
     fontSize: 20,
     fontWeight: 'bold',
   },
   moduleDesc: {
-    color: colors.textMuted,
     fontSize: 14,
     lineHeight: 20,
   },
-  spacing: {
-    marginTop: 16,
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    paddingHorizontal: 16,
+    fontSize: 14,
+    fontWeight: 'bold',
   }
 });

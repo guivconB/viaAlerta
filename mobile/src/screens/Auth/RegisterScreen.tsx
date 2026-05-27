@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { AuthContext } from '../../contexts/AuthContext';
@@ -20,6 +20,7 @@ interface Props {
 }
 
 export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const { signIn } = useContext(AuthContext);
 
   const [name, setName] = useState('');
@@ -71,7 +72,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       const response = await api.post('/users/login', { email, password });
       if (response.data.token) {
         await signIn(response.data.token);
-        navigation.replace('Home');
+        // A navegação condicional reagirá à mudança do token em AuthContext e abrirá MainTabs automaticamente.
       } else {
         alert('Conta criada, mas erro ao fazer login automático.');
       }
@@ -83,14 +84,10 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Voltar para o Login</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.title}>Criar Conta</Text>
-        <Text style={styles.subtitle}>Junte-se à comunidade viaAlerta</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Criar Conta</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>Junte-se à comunidade viaAlerta</Text>
 
         <View style={styles.form}>
           <Input 
@@ -125,6 +122,18 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           onPress={handleRegister} 
           loading={loading}
         />
+
+        <View style={styles.dividerContainer}>
+          <View style={[styles.dividerLine, { backgroundColor: colors.surface }]} />
+          <Text style={[styles.dividerText, { color: colors.textMuted }]}>OU</Text>
+          <View style={[styles.dividerLine, { backgroundColor: colors.surface }]} />
+        </View>
+
+        <Button 
+          title="Já tem conta? Entrar" 
+          onPress={() => navigation.goBack()} 
+          variant="outline"
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -133,33 +142,36 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     padding: 24,
-    paddingTop: 40,
+    paddingTop: 60,
     justifyContent: 'center',
   },
-  backButton: {
-    marginBottom: 32,
-  },
-  backButtonText: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
   title: {
-    color: colors.textPrimary,
     fontSize: 32,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   subtitle: {
-    color: colors.textMuted,
     fontSize: 16,
     marginBottom: 32,
   },
   form: {
     marginBottom: 24,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    paddingHorizontal: 16,
+    fontSize: 14,
+    fontWeight: 'bold',
   }
 });

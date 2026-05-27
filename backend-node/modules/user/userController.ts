@@ -1,4 +1,6 @@
 import { createUser, listUsers, deleteUser, loginUser } from './userService.js';
+import { findUserByEmail } from './userModel.js';
+import { findUserById } from './userModel.js';
 import type { Request, Response } from "express";
 
 /* CREATE */
@@ -31,6 +33,17 @@ export const loginUserController = async (req: Request, res: Response) => {
     return res.status(400).json({
       error: error instanceof Error ? error.message : "Falha ao autenticar usuário.",
     });
+  }
+};
+
+/* GET ME */
+export const getMeController = async (req: any, res: Response) => {
+  try {
+    const user = await findUserById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+    return res.status(200).json({ user });
+  } catch (error) {
+    return res.status(500).json({ error: 'Erro ao buscar perfil.' });
   }
 };
 

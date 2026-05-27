@@ -16,6 +16,7 @@ export interface Report {
 }
 
 let reports: Report[] = [];
+let pollingInterval: ReturnType<typeof setInterval> | null = null;
 
 type Listener = (reports: Report[]) => void;
 const listeners = new Set<Listener>();
@@ -94,9 +95,22 @@ export const reportsService = {
 
   subscribe(listener: Listener) {
     listeners.add(listener);
-    this.fetchReports();
+    this.fetchReports(); // fetch imediato ao entrar na tela
+
+    // Inicia polling a cada 15 segundos se for o primeiro listener
+    if (!pollingInterval) {
+      pollingInterval = setInterval(() => {
+        this.fetchReports();
+      }, 15000);
+    }
+
     return () => {
       listeners.delete(listener);
+      // Para o polling quando não há mais ninguém assistindo (sai da tela)
+      if (listeners.size === 0 && pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+      }
     };
   },
 

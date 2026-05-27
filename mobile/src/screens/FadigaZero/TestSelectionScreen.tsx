@@ -24,7 +24,7 @@ export const TestSelectionScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backButton}>
+        <TouchableOpacity onPress={() => navigation.navigate('Início' as any)} style={styles.backButton}>
           <Text style={styles.backButtonText}>← Início</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Fadiga Zero</Text>

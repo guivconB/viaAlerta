@@ -44,6 +44,8 @@ export const getFeed = async (currentUserId?: number) => {
       users.name as author
     FROM posts
     JOIN users ON users.id = posts.userId
+    WHERE posts.resolvedVotes < 5
+      AND posts.createdAt > DATE_SUB(NOW(), INTERVAL 48 HOUR)
     ORDER BY posts.createdAt DESC
   `);
 

@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { AuthContext } from '../../contexts/AuthContext';
@@ -22,6 +22,7 @@ interface Props {
 }
 
 export const LoginScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const { signIn } = useContext(AuthContext);
   
   const [email, setEmail] = useState('');
@@ -59,7 +60,6 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       const response = await api.post('/users/login', { email, password });
       if (response.data.token) {
         await signIn(response.data.token);
-        navigation.replace('Home');
       } else {
         alert('Erro ao fazer login. Token não retornado.');
       }
@@ -71,50 +71,59 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Fazer Login</Text>
-        <Text style={styles.subtitle}>Acesse sua conta para continuar</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Login</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+          Bem-vindo de volta! Insira suas credenciais.
+        </Text>
+      </View>
 
-        <View style={styles.form}>
-          <Input 
-            label="Email" 
-            placeholder="Digite seu email" 
-            value={email}
-            onChangeText={(text) => { setEmail(text); setErrors(prev => ({...prev, email: ''})); }}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            error={errors.email}
-          />
-          <Input 
-            label="Senha" 
-            placeholder="Digite sua senha" 
-            value={password}
-            onChangeText={(text) => { setPassword(text); setErrors(prev => ({...prev, password: ''})); }}
-            secureTextEntry
-            error={errors.password}
-          />
-          
-          <TouchableOpacity 
-            style={styles.forgotPassword}
-            onPress={() => navigation.navigate('ForgotPassword')}
-          >
-            <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.form}>
+        <Input 
+          label="E-mail"
+          placeholder="seu@email.com"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={(text) => { setEmail(text); setErrors(prev => ({...prev, email: ''})); }}
+          autoCapitalize="none"
+          error={errors.email}
+        />
+        
+        <Input 
+          label="Senha"
+          placeholder="Sua senha secreta"
+          secureTextEntry
+          value={password}
+          onChangeText={(text) => { setPassword(text); setErrors(prev => ({...prev, password: ''})); }}
+          error={errors.password}
+        />
+        
+        <TouchableOpacity 
+          style={styles.forgotPassword}
+          onPress={() => Alert.alert('Recuperar Senha', 'Entre em contato com o suporte pelo e-mail: suporte@viaalerta.app')}
+        >
+          <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>Esqueceu a senha?</Text>
+        </TouchableOpacity>
 
         <Button 
           title="Entrar" 
           onPress={handleLogin} 
           loading={loading}
+          style={styles.loginButton}
         />
         
-        <View style={styles.registerContainer}>
-          <Text style={styles.registerText}>Não tem uma conta? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.registerLink}>Cadastre-se</Text>
-          </TouchableOpacity>
+        <View style={styles.dividerContainer}>
+          <View style={[styles.dividerLine, { backgroundColor: colors.surface }]} />
+          <Text style={[styles.dividerText, { color: colors.textMuted }]}>OU</Text>
+          <View style={[styles.dividerLine, { backgroundColor: colors.surface }]} />
         </View>
+
+        <Button 
+          title="Criar nova conta" 
+          onPress={() => navigation.navigate('Register')} 
+          variant="outline"
+        />
       </View>
     </SafeAreaView>
   );
@@ -123,46 +132,45 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    justifyContent: 'center',
+  header: {
+    padding: 24,
+    paddingTop: 60,
   },
   title: {
-    color: colors.textPrimary,
     fontSize: 32,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   subtitle: {
-    color: colors.textMuted,
     fontSize: 16,
-    marginBottom: 32,
   },
   form: {
-    marginBottom: 24,
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 24,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
-    marginTop: 8,
+    marginBottom: 24,
   },
   forgotPasswordText: {
-    color: colors.primary,
-    fontSize: 14,
+    fontWeight: 'bold',
   },
-  registerContainer: {
+  loginButton: {
+    marginBottom: 24,
+  },
+  dividerContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 24,
+    alignItems: 'center',
+    marginVertical: 24,
   },
-  registerText: {
-    color: colors.textMuted,
-    fontSize: 14,
+  dividerLine: {
+    flex: 1,
+    height: 1,
   },
-  registerLink: {
-    color: colors.primary,
+  dividerText: {
+    paddingHorizontal: 16,
     fontSize: 14,
     fontWeight: 'bold',
   }

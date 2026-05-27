@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Image, Alert, ScrollView, RefreshControl } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
@@ -20,10 +20,33 @@ interface Props {
   navigation: FeedScreenNavigationProp;
 }
 
+type FilterType = 'TODOS' | 'ACIDENTE' | 'BURACO' | 'SEMAFORO_QUEBRADO' | 'ILUMINACAO_DEFICIENTE' | 'OUTRO';
+
+const FILTERS: { label: string; value: FilterType; icon: string }[] = [
+  { label: 'Todos', value: 'TODOS', icon: 'apps' },
+  { label: 'Acidentes', value: 'ACIDENTE', icon: 'car-sport' },
+  { label: 'Buracos', value: 'BURACO', icon: 'warning' },
+  { label: 'Semáforo', value: 'SEMAFORO_QUEBRADO', icon: 'eye-off' },
+  { label: 'Iluminação', value: 'ILUMINACAO_DEFICIENTE', icon: 'bulb' },
+  { label: 'Outro', value: 'OUTRO', icon: 'alert-circle' },
+];
+
 export const FeedScreen: React.FC<Props> = ({ navigation }) => {
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [reports, setReports] = useState<Report[]>([]);
   const [selectedMapReport, setSelectedMapReport] = useState<Report | null>(null);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('TODOS');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const filteredReports = activeFilter === 'TODOS'
+    ? reports
+    : reports.filter(r => r.type === activeFilter);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await reportsService.fetchReports();
+    setRefreshing(false);
+  };
 
   useEffect(() => {
     // Subscribe to reports updates in real-time
@@ -51,6 +74,11 @@ export const FeedScreen: React.FC<Props> = ({ navigation }) => {
       case 'ILUMINACAO_DEFICIENTE': return 'bulb';
       default: return 'alert-circle';
     }
+  };
+
+  const getFilterActiveColor = (filter: FilterType): string => {
+    if (filter === 'TODOS') return colors.primary;
+    return getTypeColor(filter);
   };
 
   const handleUpvote = (id: string) => {
@@ -123,7 +151,7 @@ export const FeedScreen: React.FC<Props> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.topRow}>
-          <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backButton}>
+          <TouchableOpacity onPress={() => navigation.navigate('Início' as any)} style={styles.backButton}>
             <Text style={styles.backButtonText}>← Início</Text>
           </TouchableOpacity>
 
@@ -148,13 +176,61 @@ export const FeedScreen: React.FC<Props> = ({ navigation }) => {
         <Text style={styles.title}>Feed Via Alerta</Text>
       </View>
 
+      {/* Filter chips */}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterScrollView}
+        contentContainerStyle={styles.filterContainer}
+      >
+        {FILTERS.map((f) => {
+          const isActive = activeFilter === f.value;
+          const activeColor = getFilterActiveColor(f.value);
+          return (
+            <TouchableOpacity
+              key={f.value}
+              style={[
+                styles.filterChip,
+                isActive && { backgroundColor: activeColor, borderColor: activeColor }
+              ]}
+              onPress={() => setActiveFilter(f.value)}
+            >
+              <Ionicons 
+                name={f.icon as any} 
+                size={14} 
+                color={isActive ? '#FFF' : colors.textMuted}
+                style={{ marginRight: 5 }}
+              />
+              <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
+                {f.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
       {viewMode === 'list' ? (
         <FlatList
-          data={reports}
+          data={filteredReports}
           keyExtractor={item => item.id}
           renderItem={renderReport}
-          contentContainerStyle={styles.listContainer}
+          contentContainerStyle={[styles.listContainer, filteredReports.length === 0 && styles.emptyListContainer]}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Ionicons name="map-outline" size={64} color={colors.textMuted} style={{ marginBottom: 16 }} />
+              <Text style={styles.emptyStateTitle}>Tudo certo por aqui!</Text>
+              <Text style={styles.emptyStateDesc}>
+                {activeFilter === 'TODOS'
+                  ? 'Nenhum alerta ativo nas últimas 48h.\nSeja o primeiro a reportar um problema!'
+                  : `Nenhum alerta de "${FILTERS.find(f => f.value === activeFilter)?.label}" ativo no momento.`
+                }
+              </Text>
+            </View>
+          }
         />
       ) : (
         <View style={styles.mapContainer}>
@@ -168,7 +244,7 @@ export const FeedScreen: React.FC<Props> = ({ navigation }) => {
             }}
             userInterfaceStyle="dark"
           >
-            {reports.map((report) => (
+            {filteredReports.map((report) => (
               <Marker
                 key={report.id}
                 coordinate={{ latitude: report.latitude, longitude: report.longitude }}
@@ -454,6 +530,59 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 8,
     marginBottom: 10,
+  },
+  filterScrollView: {
+    maxHeight: 52,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surface,
+  },
+  filterContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: '#333',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  filterChipText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  filterChipTextActive: {
+    color: '#FFF',
+    fontWeight: '700',
+  },
+  emptyListContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingVertical: 48,
+  },
+  emptyStateTitle: {
+    color: colors.textPrimary,
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  emptyStateDesc: {
+    color: colors.textMuted,
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
   },
   fabContainer: {
     position: 'absolute',
