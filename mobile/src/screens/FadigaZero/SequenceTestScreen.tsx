@@ -5,6 +5,7 @@ import { colors } from '../../theme/colors';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { Ionicons } from '@expo/vector-icons';
+import { testsService } from '../../services/tests';
 
 type RootStackParamList = {
   FadigaZero: undefined;
@@ -112,6 +113,14 @@ export const SequenceTestScreen: React.FC<Props> = ({ navigation }) => {
       // Wrong tap!
       Vibration.vibrate([0, 200, 100, 200]); // Danger/error pattern
       setTestState('finished');
+      
+      const score = sequence.length - 1;
+      const evaluation = getEvaluation(score);
+      testsService.addTest({
+        type: 'SEQUENCE',
+        score: score,
+        status: evaluation.text as any
+      }).catch(console.error);
     }
   };
 

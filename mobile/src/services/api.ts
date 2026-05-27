@@ -2,8 +2,8 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 // Replace with the IP of your machine running the backend
-// For Android emulator, you can use 10.0.2.2
-const BASE_URL = 'http://10.0.2.2:3333';
+// For physical devices on the same Wi-Fi, use this local IP
+const BASE_URL = 'http://192.168.1.133:3333';
 
 export const api = axios.create({
   baseURL: BASE_URL,

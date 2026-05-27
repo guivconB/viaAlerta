@@ -6,7 +6,7 @@ import cors from 'cors';
 
 import userRoutes from '../modules/user/userRoutes.js';
 import postRoutes from '../modules/post/postRoutes.js';
-
+import testRoutes from '../modules/fadigaTest/testRoutes.js';
 
 
 const app = express();
@@ -19,6 +19,7 @@ app.use("/users", (req, res, next) => {
   next();
 }, userRoutes);
 app.use('/posts', postRoutes);
+app.use('/tests', testRoutes);
 
 // Basic health check route
 app.get('/health', (req, res) => {

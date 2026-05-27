@@ -4,6 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../../theme/colors';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
+import { testsService } from '../../services/tests';
 
 type RootStackParamList = {
   Home: undefined;
@@ -51,6 +52,13 @@ export const ReflexTestScreen: React.FC<Props> = ({ navigation }) => {
       Vibration.vibrate(50); // Fast success tap vibration
       setReactionTime(timeElapsed);
       setGameState('finished');
+      
+      const status = getStatus(timeElapsed);
+      testsService.addTest({
+        type: 'REFLEX',
+        score: timeElapsed,
+        status: status.text as any
+      }).catch(console.error);
     }
   };
 

@@ -4,6 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { Card } from '../../components/Card';
+import { useAuth } from '../../contexts/AuthContext';
 
 type RootStackParamList = {
   Home: undefined;
@@ -18,10 +19,17 @@ interface Props {
 }
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
+  const { signOut } = useAuth();
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.greeting}>Olá, Motorista!</Text>
+        <View style={styles.headerTop}>
+          <Text style={styles.greeting}>Olá, Motorista!</Text>
+          <TouchableOpacity onPress={signOut} style={styles.logoutButton}>
+            <Ionicons name="log-out-outline" size={24} color={colors.danger} />
+          </TouchableOpacity>
+        </View>
         <Text style={styles.subtitle}>O que você deseja fazer agora?</Text>
       </View>
 
@@ -70,11 +78,19 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 40,
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  logoutButton: {
+    padding: 4,
+  },
   greeting: {
     color: colors.textPrimary,
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 8,
   },
   subtitle: {
     color: colors.textMuted,

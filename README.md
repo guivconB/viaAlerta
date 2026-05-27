@@ -1,68 +1,63 @@
 # viaAlerta 🚗🚦
 
-Aplicativo focado na conscientização e segurança viária, desenvolvido especialmente para apoiar o Maio Amarelo. O viaAlerta ajuda a prevenir acidentes causados por fadiga (através de testes rápidos de reflexo) e permite o mapeamento colaborativo de problemas na infraestrutura urbana.
-
-## 📱 Estrutura do Projeto
-
-O projeto adota uma arquitetura full-stack moderna, sendo dividido em duas pastas principais:
-
-- **`/mobile`**: O aplicativo frontend, construído com **React Native** e **Expo** (TypeScript). Interface focada em Dark Mode para conforto visual do motorista, componentes reutilizáveis e navegação via React Navigation.
-- **`/backend-node`**: O servidor da API, construído com **Node.js**, **Express**, e **TypeScript**. A persistência de dados é garantida pelo **MySQL** utilizando o **Prisma ORM**.
-
-A estrutura de pastas foi rigorosamente pensada seguindo os princípios de separação de responsabilidades (Clean Code), separando rotas de visualização (screens) no front e padrões MVC (controllers/routes) no back, facilitando o trabalho em equipe.
-
-## 🚀 Como Iniciar o Projeto (Guia para a Equipe)
-
-Siga os passos abaixo para rodar o projeto localmente na sua máquina.
-
-### 1. Configurando o Banco de Dados (MySQL)
-1. Certifique-se de ter o MySQL instalado e rodando na sua máquina (porta `3306`).
-2. Crie um banco de dados vazio chamado `via_alerta` no seu SGBD (DBeaver, MySQL Workbench, XAMPP, etc).
-
-### 2. Rodando o Backend (API)
-1. Abra o terminal e entre na pasta do backend:
-   ```bash
-   cd backend-node
-   ```
-2. Instale as dependências:
-   ```bash
-   npm install
-   ```
-3. Crie um arquivo `.env` na raiz da pasta `backend-node` (baseado no `schema.prisma`) com sua string de conexão:
-   ```env
-   DATABASE_URL="mysql://SEU_USUARIO:SUA_SENHA@localhost:3306/via_alerta"
-   JWT_SECRET="super-secret-key-via-alerta"
-   PORT=3000
-   ```
-4. Gere as tabelas do banco de dados utilizando o Prisma:
-   ```bash
-   npx prisma db push
-   ```
-5. Inicie o servidor em modo de desenvolvimento:
-   ```bash
-   npm run dev
-   # ou utilize o ts-node diretamente: npx ts-node src/server.ts
-   ```
-
-### 3. Rodando o Frontend (App Mobile)
-1. Abra um **novo terminal** e entre na pasta do mobile:
-   ```bash
-   cd mobile
-   ```
-2. Instale as dependências:
-   ```bash
-   npm install
-   ```
-3. Inicie o servidor do Expo:
-   ```bash
-   npx expo start
-   ```
-4. Um QR Code aparecerá no terminal. Você pode escaneá-lo usando o aplicativo **Expo Go** no seu celular (conectado no mesmo Wi-Fi), ou apertar a tecla `a` no terminal para abrir em um emulador Android.
-
-## 🛠️ Tecnologias Utilizadas
-- **Frontend**: React Native, Expo, React Navigation, Axios.
-- **Backend**: Node.js, Express, TypeScript, JWT (Autenticação).
-- **Banco de Dados**: MySQL, Prisma ORM.
+Aplicativo mobile focado na conscientização e segurança viária, desenvolvido especialmente para apoiar a campanha do Maio Amarelo. O **viaAlerta** previne acidentes causados por fadiga do motorista através de testes de prontidão cognitiva avançados (Módulo Fadiga Zero V2) e mapeia de forma colaborativa problemas na infraestrutura urbana (Módulo Via Alerta Pro).
 
 ---
-*Projeto em desenvolvimento ativo. Criado para o Maio Amarelo.*
+
+## 📱 Funcionalidades Principais
+
+### 🧠 1. Módulo Fadiga Zero V2 (Prontidão Mental & Haptics)
+Avaliamos a capacidade cognitiva do motorista antes de assumir o volante através de três minijogos de precisão:
+*   **Tempo de Reação Visual:** O usuário toca na tela assim que ela mudar de cor. A tela emite uma vibração forte instantânea ao disparar o estímulo verde para alertar condutores desatentos.
+*   **Sequência de Memória (Simon Says):** Testa a memória de curto prazo piscando blocos em ordem aleatória. Possui feedbacks táteis integrados para acompanhar cada etapa e padrões táteis de erro.
+*   **Teste de Stroop (Atenção Seletiva):** Exibe palavras escritas em fontes de cores diferentes (ex: a palavra "AZUL" escrita na cor vermelha). O usuário tem apenas **3 segundos** para responder a cor correta com o auxílio de uma barra de progresso rápida e haptics de validação.
+
+### 🗺️ 2. Módulo Via Alerta Pro (Mapeamento & Mídia - Aracaju SE)
+Mapeamento de perigos na via focado na comunidade e credibilidade urbana, totalmente ambientado em **Aracaju - SE**:
+*   **Geolocalização Automática via GPS (`expo-location`):** Captura de latitude/longitude e geocodificação reversa instantânea do endereço (rua/bairro) ao iniciar um alerta. Emuladores e simulações possuem fallback automático para a **Orla de Atalaia**.
+*   **Mapa de Ocorrências Interativo (`react-native-maps`):** Alternância em tempo real entre Feed em Lista e Mapa de Calor dinâmico focado em Aracaju. Pinos de alerta são coloridos de acordo com a categoria e gravidade (Buracos, Acidentes, Semáforos e Iluminação).
+*   **Câmera e Upload de Fotos (`expo-image-picker`):** Integração com câmera física e galeria do celular para anexar fotos de evidências.
+*   **Validação Comunitária:** Botões interativos reativos de *"Eu vi isso também" (Upvote)* e *"Resolvido"* para dar relevância e controlar a expiração de alertas gerados pela comunidade.
+
+---
+
+## 🛠️ Tecnologias & Arquitetura do Projeto
+
+O projeto é dividido em duas pastas principais:
+
+### 📱 Frontend (`/mobile`)
+*   **React Native** com **Expo** (TypeScript) compatível com Android/iOS.
+*   **Navegação e Layout**: React Navigation (Stack) com temas de Dark Mode focados no conforto do condutor à noite.
+*   **Sensores & APIs Nativas**: `expo-location` (GPS), `expo-image-picker` (Mídia/Câmera), `react-native-maps` (Geoprocessamento) e `Vibration` API.
+*   **Serviço Reativo Local**: Implementação de padrão Pub-Sub em `reports.ts` que sincroniza as ações de mapas, imagens e votos em tempo real.
+
+### 🔌 Backend (`/backend-node`)
+*   **Node.js**, **Express** e **TypeScript**.
+*   **Acesso a Dados**: Banco **MySQL** integrado usando SQL puro (`mysql2/promise`) para máxima performance, eliminando a dependência do Prisma ORM (removido para maior estabilidade e leveza).
+
+---
+
+## 🚀 Como Iniciar o Projeto (Guia de Instalação)
+
+### 1. Configurando o Banco de Dados (MySQL)
+1. Certifique-se de ter o MySQL instalado e rodando na porta `3306`.
+2. Crie um banco de dados vazio chamado `via_alerta`.
+3. Siga o guia [backend_integration_guide.md](file:///C:/Users/guivc/.gemini/antigravity/brain/2806877f-f495-47e2-94c4-343600fdcee3/backend_integration_guide.md) para a criação das tabelas em SQL puro.
+
+### 2. Rodando o Backend (API)
+```bash
+cd backend-node
+npm install
+npm run dev
+```
+
+### 3. Rodando o Frontend (App Mobile)
+```bash
+cd mobile
+npm install
+npx expo start
+```
+*Aperte a tecla `a` para abrir no emulador Android ou escaneie o QR code com o app **Expo Go** para testar em seu celular físico e sentir os feedbacks de vibração física.*
+
+---
+*Projeto sob desenvolvimento ativo focando em salvar vidas e melhorar a infraestrutura urbana no Maio Amarelo.*

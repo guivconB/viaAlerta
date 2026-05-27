@@ -5,6 +5,7 @@ import { colors } from '../../theme/colors';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { Ionicons } from '@expo/vector-icons';
+import { testsService } from '../../services/tests';
 
 type RootStackParamList = {
   FadigaZero: undefined;
@@ -99,6 +100,13 @@ export const StroopTestScreen: React.FC<Props> = ({ navigation }) => {
       generateNextRound();
     } else {
       setTestState('finished');
+      
+      const evaluation = getEvaluation(correctAnswers);
+      testsService.addTest({
+        type: 'STROOP',
+        score: correctAnswers * 10,
+        status: evaluation.text as any
+      }).catch(console.error);
     }
   };
 
