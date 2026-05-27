@@ -5,6 +5,7 @@ import { colors } from '../../theme/colors';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { AuthContext } from '../../contexts/AuthContext';
+import { api } from '../../services/api';
 // import { Ionicons } from '@expo/vector-icons'; // We will add icons next
 
 type RootStackParamList = {
@@ -54,13 +55,19 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     
     setLoading(true);
     
-    // Simulate API delay and success
-    setTimeout(async () => {
+    try {
+      const response = await api.post('/users/login', { email, password });
+      if (response.data.token) {
+        await signIn(response.data.token);
+        navigation.replace('Home');
+      } else {
+        alert('Erro ao fazer login. Token não retornado.');
+      }
+    } catch (error: any) {
+      alert(error.response?.data?.error || 'Erro ao fazer login');
+    } finally {
       setLoading(false);
-      // Simulate saving a fake token
-      await signIn('fake-jwt-token-12345');
-      navigation.replace('Home');
-    }, 1000);
+    }
   };
 
   return (

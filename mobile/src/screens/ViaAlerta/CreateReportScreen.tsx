@@ -117,7 +117,7 @@ export const CreateReportScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!description.trim()) {
       Alert.alert('Aviso', 'Por favor, insira uma descrição curta do problema.');
       return;
@@ -125,20 +125,21 @@ export const CreateReportScreen: React.FC<Props> = ({ navigation }) => {
 
     setLoading(true);
     
-    // Call the shared reports service to add the report reactively
-    reportsService.addReport({
-      type: selectedType,
-      desc: description,
-      location: locationName || 'Localização aproximada',
-      latitude,
-      longitude,
-      imageUrl: imageUri || undefined,
-    });
-
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await reportsService.addReport({
+        type: selectedType,
+        desc: description,
+        location: locationName || 'Localização aproximada',
+        latitude,
+        longitude,
+        imageUrl: imageUri || undefined,
+      });
       navigation.goBack();
-    }, 800);
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível publicar a denúncia.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

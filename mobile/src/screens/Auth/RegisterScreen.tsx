@@ -5,6 +5,7 @@ import { colors } from '../../theme/colors';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { AuthContext } from '../../contexts/AuthContext';
+import { api } from '../../services/api';
 
 type RootStackParamList = {
   Login: undefined;
@@ -60,11 +61,25 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
     if (!validate()) return;
     
     setLoading(true);
-    setTimeout(async () => {
+    try {
+      await api.post('/users', { 
+        name, 
+        email, 
+        password, 
+        birthday: new Date().toISOString() 
+      });
+      const response = await api.post('/users/login', { email, password });
+      if (response.data.token) {
+        await signIn(response.data.token);
+        navigation.replace('Home');
+      } else {
+        alert('Conta criada, mas erro ao fazer login automático.');
+      }
+    } catch (error: any) {
+      alert(error.response?.data?.error || 'Erro ao criar conta');
+    } finally {
       setLoading(false);
-      await signIn('fake-jwt-token-12345');
-      navigation.replace('Home');
-    }, 1000);
+    }
   };
 
   return (
